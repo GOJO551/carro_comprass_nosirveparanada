@@ -6,27 +6,33 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import models.Productos;
-import service.LoginService;
-import service.LoginServiceSessionImplement;
-import service.ProductoService;
-import service.ProductoServiceImplement;
+import service.*;
 
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
 @WebServlet("/productos")
 public class ProductoServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        ProductoService servicios = new ProductoServiceImplement();
+        //ProductoService servicios = new ProductoServiceImplement();
+        //creamos la conexecion a la base de datos
+
+        Connection conn = (Connection) req.getAttribute("conn");
+        ProductoService servicios = new ProductoServicesJdbcImplement();
+
         List<Productos> productos = servicios.listar();
 
 
         LoginService auth = new LoginServiceSessionImplement();
         Optional<String> usernameOptional=auth.getUsername(req);
+        //seteamos los parametros del producto y usermane
+        req.setAttribute("productos", productos);
+        req.setAttribute("username", usernameOptional);
 
-        resp.setContentType("text/html;charset=UTF-8");
+        /*resp.setContentType("text/html;charset=UTF-8");
         try( PrintWriter out = resp.getWriter()) {
             //Creo la plantilla html
             out.print("<!DOCTYPE html>");
@@ -70,6 +76,7 @@ public class ProductoServlet extends HttpServlet {
             out.println("</table>");
             out.println("</body>");
             out.println("</html>");
-        }
+        }*/
+        getServletContext().getRequestDispatcher("/listar.jsp").forward(req, resp);
     }
 }

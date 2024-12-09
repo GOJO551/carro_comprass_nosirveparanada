@@ -2,6 +2,8 @@ package filter;
 
 import jakarta.servlet.*;
 import jakarta.servlet.annotation.WebFilter;
+import jakarta.servlet.http.HttpServletResponse;
+import service.ServiceJdbcException;
 import utils.Conexion;
 
 import java.io.IOException;
@@ -56,13 +58,17 @@ public class ConexionFilter implements Filter {
                 conn.commit();
                 //Si ocurre alguna excepción se lanza dicha excepción
                 //y no se cambia la base de datos
-            }catch(SQLException e){
+            }catch(SQLException | ServiceJdbcException e){
                 //Se deshacen los cambios con rollback y de esa forma se mantien
                 //la integridad de los datos
                 conn.rollback();
+                // se envia un codigo de error envie un HTTP 500 al cliente
+                //indicando un problema interno el servidor
+                ((HttpServletResponse)response).sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR , e.getMessage());
+                e.printStackTrace();
             }
-        } catch (SQLException e) {
-            throw new RuntimeException(e);
+        } catch (SQLException throwables){
+            throwables.printStackTrace();
         }
     }
 }
